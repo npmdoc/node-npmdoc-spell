@@ -1,0 +1,489 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="http://github.com/dscape/spell">spell (v1.0.0)</a>
+</h1>
+<h4>javascript dictionary module for node.js, and the browser</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.spell">module spell</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spell.spell">
+            function <span class="apidocSignatureSpan"></span>spell
+            <span class="apidocSignatureSpan">(dict_store)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">spell.</span>platform</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">spell.</span>path</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">spell.</span>version</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.spell.spell">module spell.spell</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.spell.spell.spell">
+            function <span class="apidocSignatureSpan">spell.</span>spell
+            <span class="apidocSignatureSpan">(dict_store)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">spell.spell.</span>platform</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">spell.spell.</span>path</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">spell.spell.</span>version</span>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.spell" id="apidoc.module.spell">module spell</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.spell.spell" id="apidoc.element.spell.spell">
+        function <span class="apidocSignatureSpan"></span>spell
+        <span class="apidocSignatureSpan">(dict_store)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function dictionary(dict_store) {
+var dict          =
+  dict_store &amp;&amp; typeof dict_store.get === 'function' ? dict_store.get() : {}
+, noop          = function(){}
+, alphabet      = "abcdefghijklmnopqrstuvwxyz".split("")
+;
+
+function spell_store(cb) {
+if (dict_store &amp;&amp; typeof dict_store.store === 'function') {
+  dict_store.store(dict, cb);
+}
+}
+
+function spell_train(corpus,regex) {
+var match, word;
+regex         = regex || /[a-z]+/g;
+corpus        = corpus.toLowerCase();
+while ((match = regex.exec(corpus))) {
+  word        = match[0];
+  spell_add_word(word, 1);
+}
+}
+
+function spell_edits(word, alphabetOverride) {
+var edits        = []
+  , thisAlphabet = alphabetOverride ? alphabetOverride : alphabet
+  , i
+  , j
+  ;
+for (i=0; i &lt; word.length; i++) {  // deletion
+  edits.push(word.slice(0, i) + word.slice(i+1));
+}
+for (i=0; i &lt; word.length-1; i++) { // transposition
+  edits.push( word.slice(0, i) + word.slice(i+1, i+2) +
+    word.slice(i, i+1) + word.slice(i+2));
+}
+for (i=0; i &lt; word.length; i++) {  // alteration
+  for(j in thisAlphabet) {
+    edits.push(word.slice(0, i) + thisAlphabet[j] + word.slice(i+1));
+  }
+}
+for (i=0; i &lt;= word.length; i++) { // insertion
+  for(j in thisAlphabet) {
+    edits.push(word.slice(0, i) + thisAlphabet[j] + word.slice(i));
+  }
+}
+return edits;
+}
+
+function is_empty(obj) {
+for (var key in obj) { if (obj.hasOwnProperty(key)) return false; }
+return true;
+}
+
+function spell_order(candidates, min, max) {
+var ordered_candidates = []
+  , current
+  , i
+  , w
+  ;
+for(i=max; i&gt;=min; i--) {
+  if(candidates.hasOwnProperty(i)) {
+    current = candidates[i];
+    for (w in current) {
+      if(current.hasOwnProperty(w)) {
+        ordered_candidates.push({"word": w, "score": i});
+      }
+    }
+  }
+}
+return ordered_candidates;
+}
+
+<span class="apidocCodeCommentSpan">/*
+ * reset
+ *
+ * resets the dictionary.
+ *
+ * e.g.
+ * spell.reset();
+ *
+ * @return void
+ */
+</span>function spell_reset() { return spell_load({reset: true}); }
+
+/*
+ * load
+ *
+ * loads a free form corpus dictionary.
+ *
+ * e.g.
+ * spell.load({'dog': 1, 'cat': 2});
+ * spell.load('dog cat cat');
+ *
+ * @param {opts.corpus:string|object:optional}
+ *        corpus string to initialize to
+ * @param {opts.reset:boolean:optional}
+ *        whether you want to reset the existing dictionary or just append
+ *        to what already exists
+ * @param {opts.store:boolean:optional}
+ *        decide if you want to use storage
+ * @param {opts.after_store:function:optional}
+ *        function to call back when store is done
+ *
+ * @return void
+ */
+function spell_load(corpus, opts) {
+if ('object' === typeof corpus) { opts = corpus; }
+if ('string' === typeof corpus) {
+  if('object' === typeof opts) {
+    opts.corpus = corpus;
+  } else {
+    opts = {corpus: corpus };
+  }
+}
+if ('string' === typeof opts)   { opts = {corpus: opts }; }
+opts               = 'object' === typeof opts ? opts : {};
+opts.reset         = (opts.reset !== false);
+opts.store         = (opts.store !== false);
+opts.after_store   = opts.after_store   || noop;
+opts.corpus        = opts.corpus        || '';
+if(opts.reset) { dict  = {}; }
+if('object' === typeof opts.corpus) {
+  for(var key in opts.corpus) {
+    spell_add_word(key, {score: opts.corpus[key]});
+  }
+} else { spell_train(opts.corpus); }
+if(opts.store) { spell_store(opts.after_store); }
+}
+
+/*
+ * add word
+ *
+ * loads a word into the dictionary
+ *
+ * e.g.
+ * spell.insert_word('dog', 5);
+ *
+ * @param {word:string:required}
+ *        the word you want to add
+ * @param {opts.count:int:optional}
+ *        the number of times the word appears in a text, defaults to one
+ * @param {opts.store:boolean:optional}
+ *        decide if you want to use storage
+ * @param {opts.done:function:optional}
+ *        function to call back when store is done
+ *
+ * @return void
+ */
+function spell_add_word(word, opts) {
+if ('string' === typeof opts || 'number' === typeof opts) {
+  opts = { score: parseInt(opts, 10) };
+}
+opts        = 'object' === typeof opts ? opts : {};
+opts.score  = opts.score  || 1;
+opts.store  = opts.store  || true;
+opts.done   = opts.done   || noop;
+word        = word.toLowerCase();
+dict ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.spell.spell" id="apidoc.module.spell.spell">module spell.spell</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.spell.spell.spell" id="apidoc.element.spell.spell.spell">
+        function <span class="apidocSignatureSpan">spell.</span>spell
+        <span class="apidocSignatureSpan">(dict_store)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function dictionary(dict_store) {
+var dict          =
+  dict_store &amp;&amp; typeof dict_store.get === 'function' ? dict_store.get() : {}
+, noop          = function(){}
+, alphabet      = "abcdefghijklmnopqrstuvwxyz".split("")
+;
+
+function spell_store(cb) {
+if (dict_store &amp;&amp; typeof dict_store.store === 'function') {
+  dict_store.store(dict, cb);
+}
+}
+
+function spell_train(corpus,regex) {
+var match, word;
+regex         = regex || /[a-z]+/g;
+corpus        = corpus.toLowerCase();
+while ((match = regex.exec(corpus))) {
+  word        = match[0];
+  spell_add_word(word, 1);
+}
+}
+
+function spell_edits(word, alphabetOverride) {
+var edits        = []
+  , thisAlphabet = alphabetOverride ? alphabetOverride : alphabet
+  , i
+  , j
+  ;
+for (i=0; i &lt; word.length; i++) {  // deletion
+  edits.push(word.slice(0, i) + word.slice(i+1));
+}
+for (i=0; i &lt; word.length-1; i++) { // transposition
+  edits.push( word.slice(0, i) + word.slice(i+1, i+2) +
+    word.slice(i, i+1) + word.slice(i+2));
+}
+for (i=0; i &lt; word.length; i++) {  // alteration
+  for(j in thisAlphabet) {
+    edits.push(word.slice(0, i) + thisAlphabet[j] + word.slice(i+1));
+  }
+}
+for (i=0; i &lt;= word.length; i++) { // insertion
+  for(j in thisAlphabet) {
+    edits.push(word.slice(0, i) + thisAlphabet[j] + word.slice(i));
+  }
+}
+return edits;
+}
+
+function is_empty(obj) {
+for (var key in obj) { if (obj.hasOwnProperty(key)) return false; }
+return true;
+}
+
+function spell_order(candidates, min, max) {
+var ordered_candidates = []
+  , current
+  , i
+  , w
+  ;
+for(i=max; i&gt;=min; i--) {
+  if(candidates.hasOwnProperty(i)) {
+    current = candidates[i];
+    for (w in current) {
+      if(current.hasOwnProperty(w)) {
+        ordered_candidates.push({"word": w, "score": i});
+      }
+    }
+  }
+}
+return ordered_candidates;
+}
+
+<span class="apidocCodeCommentSpan">/*
+ * reset
+ *
+ * resets the dictionary.
+ *
+ * e.g.
+ * spell.reset();
+ *
+ * @return void
+ */
+</span>function spell_reset() { return spell_load({reset: true}); }
+
+/*
+ * load
+ *
+ * loads a free form corpus dictionary.
+ *
+ * e.g.
+ * spell.load({'dog': 1, 'cat': 2});
+ * spell.load('dog cat cat');
+ *
+ * @param {opts.corpus:string|object:optional}
+ *        corpus string to initialize to
+ * @param {opts.reset:boolean:optional}
+ *        whether you want to reset the existing dictionary or just append
+ *        to what already exists
+ * @param {opts.store:boolean:optional}
+ *        decide if you want to use storage
+ * @param {opts.after_store:function:optional}
+ *        function to call back when store is done
+ *
+ * @return void
+ */
+function spell_load(corpus, opts) {
+if ('object' === typeof corpus) { opts = corpus; }
+if ('string' === typeof corpus) {
+  if('object' === typeof opts) {
+    opts.corpus = corpus;
+  } else {
+    opts = {corpus: corpus };
+  }
+}
+if ('string' === typeof opts)   { opts = {corpus: opts }; }
+opts               = 'object' === typeof opts ? opts : {};
+opts.reset         = (opts.reset !== false);
+opts.store         = (opts.store !== false);
+opts.after_store   = opts.after_store   || noop;
+opts.corpus        = opts.corpus        || '';
+if(opts.reset) { dict  = {}; }
+if('object' === typeof opts.corpus) {
+  for(var key in opts.corpus) {
+    spell_add_word(key, {score: opts.corpus[key]});
+  }
+} else { spell_train(opts.corpus); }
+if(opts.store) { spell_store(opts.after_store); }
+}
+
+/*
+ * add word
+ *
+ * loads a word into the dictionary
+ *
+ * e.g.
+ * spell.insert_word('dog', 5);
+ *
+ * @param {word:string:required}
+ *        the word you want to add
+ * @param {opts.count:int:optional}
+ *        the number of times the word appears in a text, defaults to one
+ * @param {opts.store:boolean:optional}
+ *        decide if you want to use storage
+ * @param {opts.done:function:optional}
+ *        function to call back when store is done
+ *
+ * @return void
+ */
+function spell_add_word(word, opts) {
+if ('string' === typeof opts || 'number' === typeof opts) {
+  opts = { score: parseInt(opts, 10) };
+}
+opts        = 'object' === typeof opts ? opts : {};
+opts.score  = opts.score  || 1;
+opts.store  = opts.store  || true;
+opts.done   = opts.done   || noop;
+word        = word.toLowerCase();
+dict ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+
+
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
